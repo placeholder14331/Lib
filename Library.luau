@@ -8741,11 +8741,11 @@ function Library:CreateESP(Parent, Config, Base)
         Put(Frame, 'Rotation', math.deg(math.atan2(Delta.Y, Delta.X)));
     end;
 
-    local function HealthColor(Percent)
-        if Percent <= 0.5 then return Color3.fromRGB(255, 0, 0):Lerp(Color3.fromRGB(255, 255, 0), Percent / 0.5) end;
-
-        return Color3.fromRGB(255, 255, 0):Lerp(Color3.fromRGB(0, 255, 0), (Percent - 0.5) / 0.5);
-    end;
+    local HealthRamp = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 0)),
+    });
 
     local function SampleSequence(Sequence, Time)
         local Points = Sequence.Keypoints;
@@ -8884,12 +8884,7 @@ function Library:CreateESP(Parent, Config, Base)
                 Put(G.Gradient, 'Offset', Vector2.new(0, 1 - Level));
             end;
 
-            if Health.HealthBased and not Tint then
-                Put(G.Gradient, 'Enabled', false);
-                Put(G.Fill, 'BackgroundColor3', Health.Sequence and SampleSequence(Health.Sequence, Level) or HealthColor(Level));
-            else
-                Tone(G.Fill, 'BackgroundColor3', G.Gradient, Tint, Health.Color or Color3.new(0, 1, 0), Health.Sequence);
-            end;
+            Tone(G.Fill, 'BackgroundColor3', G.Gradient, Tint, Health.Color or Color3.new(0, 1, 0), Health.HealthBased and HealthRamp or Health.Sequence);
         else
             Off(E.Bar);
         end;
@@ -8904,7 +8899,7 @@ function Library:CreateESP(Parent, Config, Base)
 
             if Health.HealthBased and not Tint then
                 Put(G.Gradient, 'Enabled', false);
-                Put(G.Label, 'TextColor3', Health.Sequence and SampleSequence(Health.Sequence, Level) or HealthColor(Level));
+                Put(G.Label, 'TextColor3', SampleSequence(HealthRamp, Level));
             else
                 Tone(G.Label, 'TextColor3', G.Gradient, Tint, Health.Color or Color3.new(0, 1, 0), Health.Sequence);
             end;
