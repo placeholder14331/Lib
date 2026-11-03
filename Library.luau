@@ -8759,8 +8759,36 @@ function Library:CreateESP(Parent, Config, Base)
         Put(G.Label, 'Visible', true);
     end;
 
-    local function Tone(Obj, Prop, Gradient, Tint, Color, Sequence)
-        if Sequence and not Tint then
+    local Spreads, SpreadColor, SpreadSequence = {}, nil, nil;
+
+    local function Spread(Color)
+        if Color ~= SpreadColor then
+            local Key = Color:ToHex();
+
+            SpreadSequence = Spreads[Key];
+
+            if not SpreadSequence then
+                SpreadSequence = ColorSequence.new(Color, Color:Lerp(White, 0.5));
+                Spreads[Key] = SpreadSequence;
+            end;
+
+            SpreadColor = Color;
+        end;
+
+        return SpreadSequence;
+    end;
+
+    local function Tone(Obj, Prop, Gradient, Tint, Color, Sequence, Mine)
+        if Mine and not Tint then
+            if Sequence then
+                Put(Gradient, 'Enabled', true);
+                Put(Gradient, 'Color', Spread(Mine));
+                Put(Obj, Prop, White);
+            else
+                Put(Gradient, 'Enabled', false);
+                Put(Obj, Prop, Mine);
+            end;
+        elseif Sequence and not Tint then
             Put(Gradient, 'Enabled', true);
             Put(Gradient, 'Color', Sequence);
             Put(Obj, Prop, White);
@@ -8800,8 +8828,8 @@ function Library:CreateESP(Parent, Config, Base)
         return Points[#Points].Value;
     end;
 
-    local function Shade(G, Cfg, Pixel, Tint)
-        Tone(G.Label, 'TextColor3', G.Gradient, Tint, Cfg.Color, Cfg.Sequence);
+    local function Shade(G, Cfg, Tint, Mine)
+        Tone(G.Label, 'TextColor3', G.Gradient, Tint, Cfg.Color, Cfg.Sequence, Mine);
         Put(G.Label, 'TextTransparency', Cfg.Transparency or 0);
         Put(G.Label, 'TextStrokeTransparency', Cfg.Outline ~= false and (Cfg.Transparency or 0) or 1);
     end;
@@ -8843,7 +8871,7 @@ function Library:CreateESP(Parent, Config, Base)
             Put(G.Main, 'Size', UDim2.fromOffset(W, H));
             Put(G.Stroke, 'Thickness', T);
             Put(G.Stroke, 'Transparency', Boxes.Transparency or 0);
-            Tone(G.Stroke, 'Color', G.Gradient, Override, Boxes.Color, Boxes.Sequence);
+            Tone(G.Stroke, 'Color', G.Gradient, Tint, Boxes.Color, Boxes.Sequence, Info.Color);
 
             Put(G.Out, 'Visible', Ring);
             Put(G.In, 'Visible', Ring);
@@ -8861,7 +8889,7 @@ function Library:CreateESP(Parent, Config, Base)
                 Put(G.Fill, 'Position', UDim2.fromOffset(X, Y));
                 Put(G.Fill, 'Size', UDim2.fromOffset(W, H));
                 Put(G.Fill, 'BackgroundTransparency', Boxes.FillTransparency or 0.6);
-                Tone(G.Fill, 'BackgroundColor3', G.FillGradient, Override, Boxes.FillColor, Boxes.FillSequence);
+                Tone(G.Fill, 'BackgroundColor3', G.FillGradient, Tint, Boxes.FillColor, Boxes.FillSequence, Info.Color);
             end;
         else
             Off(E.Box);
@@ -8890,8 +8918,10 @@ function Library:CreateESP(Parent, Config, Base)
             local G = Group('Bar', function(G)
                 G.Back = Make('Frame', { BackgroundColor3 = Color3.fromRGB(20, 20, 20) }, 2, G);
                 G.Stroke = Make('UIStroke', { Color = Black; LineJoinMode = Miter; Parent = G.Back });
-                G.Fill = Make('Frame', { BackgroundColor3 = White; Parent = G.Back }, 3, G);
+                G.Fill = Make('Frame', { BackgroundColor3 = White; ClipsDescendants = true; Parent = G.Back }, 3, G);
                 G.Gradient = Make('UIGradient', { Enabled = false; Parent = G.Fill });
+                G.Ramp = Make('Frame', { BackgroundColor3 = White; Parent = G.Fill }, 4, G);
+                G.RampGradient = Make('UIGradient', { Color = HealthRamp; Parent = G.Ramp });
             end);
 
             local Gap = Edge + 3;
@@ -8913,22 +8943,36 @@ function Library:CreateESP(Parent, Config, Base)
             Put(G.Fill, 'Visible', true);
             Put(G.Back, 'Position', UDim2.fromOffset(BX, BY));
             Put(G.Back, 'Size', UDim2.fromOffset(BW, BH));
+            local Ramped = Health.HealthBased and not Tint;
+            local Spanned = Ramped and Health.Sequence and true or false;
+            local Part = math.max(Level, 0.001);
+
             Put(G.Stroke, 'Enabled', Health.Outline ~= false);
-            Put(G.Fill, 'BackgroundTransparency', Health.Transparency or 0);
+            Put(G.Stroke, 'Color', Health.OutlineColor or Black);
+            Put(G.Stroke, 'Transparency', Health.OutlineTransparency or Health.Transparency or 0);
+            Put(G.Fill, 'BackgroundTransparency', Spanned and 1 or (Health.Transparency or 0));
+            Put(G.Ramp, 'Visible', Spanned);
+            Put(G.Ramp, 'BackgroundTransparency', Health.Transparency or 0);
 
             if Side == 'Top' or Side == 'Bottom' then
                 Put(G.Fill, 'Position', UDim2.fromScale(0, 0));
                 Put(G.Fill, 'Size', UDim2.fromScale(Level, 1));
                 Put(G.Gradient, 'Rotation', 0);
                 Put(G.Gradient, 'Offset', Vector2.new(1 - Level, 0));
+                Put(G.Ramp, 'Position', UDim2.fromScale(0, 0));
+                Put(G.Ramp, 'Size', UDim2.fromScale(1 / Part, 1));
+                Put(G.RampGradient, 'Rotation', 0);
             else
                 Put(G.Fill, 'Position', UDim2.fromScale(0, 1 - Level));
                 Put(G.Fill, 'Size', UDim2.fromScale(1, Level));
                 Put(G.Gradient, 'Rotation', -90);
                 Put(G.Gradient, 'Offset', Vector2.new(0, 1 - Level));
+                Put(G.Ramp, 'Position', UDim2.fromScale(0, -(1 - Level) / Part));
+                Put(G.Ramp, 'Size', UDim2.fromScale(1, 1 / Part));
+                Put(G.RampGradient, 'Rotation', -90);
             end;
 
-            Tone(G.Fill, 'BackgroundColor3', G.Gradient, Tint, Health.Color or Color3.new(0, 1, 0), Health.HealthBased and HealthRamp or Health.Sequence);
+            Tone(G.Fill, 'BackgroundColor3', G.Gradient, Tint, Ramped and SampleSequence(HealthRamp, Level) or Health.Color or Color3.new(0, 1, 0), not Health.HealthBased and Health.Sequence or nil);
         else
             Off(E.Bar);
         end;
@@ -8939,7 +8983,8 @@ function Library:CreateESP(Parent, Config, Base)
             local Beside = Edge + ((ShowBar and Side == Where) and Bar + 3 or 0) + 2;
 
             Put(G.Label, 'TextTransparency', Health.Transparency or 0);
-            Put(G.Label, 'TextStrokeTransparency', Health.Outline ~= false and (Health.Transparency or 0) or 1);
+            Put(G.Label, 'TextStrokeColor3', Health.OutlineColor or Black);
+            Put(G.Label, 'TextStrokeTransparency', Health.Outline ~= false and (Health.OutlineTransparency or Health.Transparency or 0) or 1);
 
             if Health.HealthBased and not Tint then
                 Put(G.Gradient, 'Enabled', false);
@@ -8971,7 +9016,7 @@ function Library:CreateESP(Parent, Config, Base)
             local Format = Names.Format;
             local Display = Info.DisplayName or Info.Name;
 
-            Shade(G, Names, Pixel, Override);
+            Shade(G, Names, Tint, Info.Color);
 
             Up = Up - Row;
             Say(G, Format == 'Username' and Info.Name or Format == 'Both' and (Display .. ' (@' .. Info.Name .. ')') or Display, Pixel, 'Center', CX, Up);
@@ -8982,7 +9027,7 @@ function Library:CreateESP(Parent, Config, Base)
         if Tags.Enabled and Info.Tag then
             local G = Group('Tag', Words);
 
-            Shade(G, Tags, Pixel, Override);
+            Shade(G, Tags, Tint, Info.Color);
 
             Up = Up - Row;
             Say(G, Info.Tag, Pixel, 'Center', CX, Up);
@@ -8994,7 +9039,7 @@ function Library:CreateESP(Parent, Config, Base)
             local G = Group('Distance', Words);
             local Text = math.floor(Info.Distance) .. 'm';
 
-            Shade(G, Dist, Pixel, Override);
+            Shade(G, Dist, Tint, Info.Color);
             Say(G, Dist.Brackets and ('[' .. Text .. ']') or Text, Pixel, 'Center', CX, Down);
         else
             Off(E.Distance);
