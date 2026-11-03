@@ -1,3 +1,4 @@
+-- upd2
 local X = {
     gethui = gethui or get_hidden_gui or gethiddengui or (syn and syn.gethui);
     cloneref = cloneref or clonereference or function(Item) return Item end;
@@ -1185,10 +1186,27 @@ function Library:RemoveFromRegistry(Instance)
     Library.Registry[Instance] = nil;
 end;
 
+Library.Detached = {};
+
 function Library:Detach(Instance)
-    Library.Detaching = true;
+    if not Library.Detached[Instance] then
+        Library.Detached[Instance] = true;
+
+        local Watch, Gone;
+
+        local function Clear()
+            Library.Detached[Instance] = nil;
+            Watch:Disconnect();
+            Gone:Disconnect();
+        end;
+
+        Watch = Instance:GetPropertyChangedSignal('Parent'):Connect(function()
+            if Instance.Parent then Clear() end;
+        end);
+        Gone = Instance.Destroying:Connect(Clear);
+    end;
+
     Instance.Parent = nil;
-    Library.Detaching = false;
 end;
 
 function Library:UpdateColorsUsingRegistry(Only)
@@ -1232,6 +1250,17 @@ function Library:DestroyWith(Owner, ...)
                 Thing();
             else
                 Library.OpenedFrames[Thing] = nil;
+                Library.Detached[Thing] = nil;
+
+                for _, Item in ipairs(Thing:GetDescendants()) do
+                    Library.Registry[Item] = nil;
+                    Library.Corners[Item] = nil;
+                    Library.Bordered[Item] = nil;
+                end;
+
+                Library.Registry[Thing] = nil;
+                Library.Corners[Thing] = nil;
+                Library.Bordered[Thing] = nil;
                 Thing:Destroy();
             end;
         end;
@@ -1282,12 +1311,15 @@ function Library:Unload()
 end;
 
 Library:GiveSignal(ScreenGui.DescendantRemoving:Connect(function(Instance)
-    if Library.Detaching then return end;
+    local Walk = Instance;
 
-    if Library.Registry[Instance] then
-        Library:RemoveFromRegistry(Instance);
+    while Walk do
+        if Library.Detached[Walk] then return end;
+
+        Walk = Walk.Parent;
     end;
 
+    Library:RemoveFromRegistry(Instance);
     Library.Corners[Instance] = nil;
     Library.Bordered[Instance] = nil;
 end));
@@ -5403,6 +5435,7 @@ do
         end;
 
         Depbox.Container = Frame;
+        Depbox.Holder = Holder;
         Depbox.Top = Groupbox.Top or Groupbox;
 
         setmetatable(Depbox, BaseGroupbox);
@@ -8371,6 +8404,9 @@ function TabBase:AddTabbox(Info)
             SortOrder = Enum.SortOrder.LayoutOrder;
             Parent = Container;
         });
+
+        Library:Detach(Container);
+        Library:DestroyWith(BoxOuter, Container);
 
         function Tab:Show()
             for _, Other in next, Tabbox.Tabs do
