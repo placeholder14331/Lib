@@ -8774,7 +8774,9 @@ function Library:CreateESP(Parent, Config, Base)
         local Row = Pixel + 2;
         local Tint = Library:ESPTint(Config);
         local Boxes, Names, Dist = Config.Boxes or Empty, Config.Names or Empty, Config.Distance or Empty;
-        local Health, Trace = Config.Health or Empty, Config.Tracers or Empty;
+        local Health, Trace, Tags = Config.Health or Empty, Config.Tracers or Empty, Config.Tags or Empty;
+        local Override = Tint or Info.Color;
+        local Has = Info.Health ~= nil and Info.MaxHealth ~= nil;
         local X, Y, W, H = Info.X, Info.Y, Info.W, Info.H;
         local CX, CY = X + math.floor(W / 2), Y + math.floor(H / 2);
         local Edge = 0;
@@ -8804,7 +8806,7 @@ function Library:CreateESP(Parent, Config, Base)
             Put(G.Main, 'Size', UDim2.fromOffset(W, H));
             Put(G.Stroke, 'Thickness', T);
             Put(G.Stroke, 'Transparency', Boxes.Transparency or 0);
-            Tone(G.Stroke, 'Color', G.Gradient, Tint, Boxes.Color, Boxes.Sequence);
+            Tone(G.Stroke, 'Color', G.Gradient, Override, Boxes.Color, Boxes.Sequence);
 
             Put(G.Out, 'Visible', Ring);
             Put(G.In, 'Visible', Ring);
@@ -8822,24 +8824,29 @@ function Library:CreateESP(Parent, Config, Base)
                 Put(G.Fill, 'Position', UDim2.fromOffset(X, Y));
                 Put(G.Fill, 'Size', UDim2.fromOffset(W, H));
                 Put(G.Fill, 'BackgroundTransparency', Boxes.FillTransparency or 0.6);
-                Tone(G.Fill, 'BackgroundColor3', G.FillGradient, Tint, Boxes.FillColor, Boxes.FillSequence);
+                Tone(G.Fill, 'BackgroundColor3', G.FillGradient, Override, Boxes.FillColor, Boxes.FillSequence);
             end;
         else
             Off(E.Box);
         end;
 
-        local Percent = math.clamp(Info.Health / (Info.MaxHealth > 0 and Info.MaxHealth or 100), 0, 1);
+        local Level = Drawer.Level;
 
-        if Health.Lerp then
-            Drawer.Level = (Drawer.Level or Percent) + (Percent - (Drawer.Level or Percent)) * 0.18;
-        else
-            Drawer.Level = Percent;
+        if Has then
+            local Percent = math.clamp(Info.Health / (Info.MaxHealth > 0 and Info.MaxHealth or 100), 0, 1);
+
+            if Health.Lerp then
+                Drawer.Level = (Drawer.Level or Percent) + (Percent - (Drawer.Level or Percent)) * 0.18;
+            else
+                Drawer.Level = Percent;
+            end;
+
+            Level = Drawer.Level;
         end;
 
-        local Level = Drawer.Level;
         local Up, Down = Y - Edge - 2, Y + H + Edge + 2;
-        local ShowBar = Health.Enabled and (Health.Mode == 'Health Bar' or Health.Mode == 'Both');
-        local ShowText = Health.Enabled and (Health.Mode == 'Health Text' or Health.Mode == 'Both');
+        local ShowBar = Has and Health.Enabled and (Health.Mode == 'Health Bar' or Health.Mode == 'Both');
+        local ShowText = Has and Health.Enabled and (Health.Mode == 'Health Text' or Health.Mode == 'Both');
         local Side = Health.Side or 'Left';
 
         if ShowBar then
@@ -8925,20 +8932,32 @@ function Library:CreateESP(Parent, Config, Base)
         if Names.Enabled then
             local G = Group('Name', Words);
             local Format = Names.Format;
+            local Display = Info.DisplayName or Info.Name;
 
-            Shade(G, Names, Pixel, Tint);
+            Shade(G, Names, Pixel, Override);
 
             Up = Up - Row;
-            Say(G, Format == 'Username' and Info.Name or Format == 'Both' and (Info.DisplayName .. ' (@' .. Info.Name .. ')') or Info.DisplayName, Pixel, 'Center', CX, Up);
+            Say(G, Format == 'Username' and Info.Name or Format == 'Both' and (Display .. ' (@' .. Info.Name .. ')') or Display, Pixel, 'Center', CX, Up);
         else
             Off(E.Name);
         end;
 
-        if Dist.Enabled then
+        if Tags.Enabled and Info.Tag then
+            local G = Group('Tag', Words);
+
+            Shade(G, Tags, Pixel, Override);
+
+            Up = Up - Row;
+            Say(G, Info.Tag, Pixel, 'Center', CX, Up);
+        else
+            Off(E.Tag);
+        end;
+
+        if Dist.Enabled and Info.Distance then
             local G = Group('Distance', Words);
             local Text = math.floor(Info.Distance) .. 'm';
 
-            Shade(G, Dist, Pixel, Tint);
+            Shade(G, Dist, Pixel, Override);
             Say(G, Dist.Brackets and ('[' .. Text .. ']') or Text, Pixel, 'Center', CX, Down);
         else
             Off(E.Distance);
@@ -8956,7 +8975,7 @@ function Library:CreateESP(Parent, Config, Base)
             Put(G.Stroke, 'Enabled', Trace.Outline ~= false);
             Put(G.Stroke, 'Color', Trace.OutlineColor or Black);
             Put(G.Stroke, 'Transparency', Trace.OutlineTransparency or Trace.Transparency or 0);
-            Tone(G.Main, 'BackgroundColor3', G.Gradient, Tint, Trace.Color, Trace.Sequence);
+            Tone(G.Main, 'BackgroundColor3', G.Gradient, Override, Trace.Color, Trace.Sequence);
             Line(G.Main, Info.From, Info.To);
         else
             Off(E.Tracer);
@@ -9005,6 +9024,7 @@ function Library:ESPPreview(Info)
             Names = { Enabled = true; Outline = true; Format = 'Display Name'; Color = White; Sequence = false; Transparency = 0 };
             Health = { Enabled = true; Mode = 'Health Bar'; Side = 'Left'; TextSide = 'Bottom'; HealthBased = false; Lerp = false; Outline = true; Color = Color3.new(0, 1, 0); Sequence = false; Transparency = 0 };
             Distance = { Enabled = true; Outline = true; Brackets = false; Color = White; Sequence = false; Transparency = 0 };
+            Tags = { Enabled = true; Outline = true; Color = White; Sequence = false; Transparency = 0 };
             Tracers = { Enabled = false; Outline = true; Color = White; Sequence = false; Transparency = 0; Origin = 'Bottom'; Target = 'Torso' };
             Skeleton = { Enabled = false; Color = White };
             Chams = { Enabled = false; Color = White; Transparency = 0; Material = 'SmoothPlastic' };
@@ -9015,7 +9035,7 @@ function Library:ESPPreview(Info)
     local Empty = {};
 
     Preview.Config = Cfg;
-    Preview.Sample = { Name = 'player', DisplayName = 'Player', Health = 100, MaxHealth = 100, Distance = 12 };
+    Preview.Sample = { Name = 'player', DisplayName = 'Player', Tag = '[Tag]', Health = 100, MaxHealth = 100, Distance = 12 };
 
     for Key, Value in next, Info.Sample or {} do Preview.Sample[Key] = Value end;
 
@@ -9340,7 +9360,7 @@ function Library:ESPPreview(Info)
 
         Drawer:Draw({
             X = Rect.X; Y = Rect.Y; W = Rect.W; H = Rect.H;
-            Name = Sample.Name; DisplayName = Sample.DisplayName;
+            Name = Sample.Name; DisplayName = Sample.DisplayName; Tag = Sample.Tag; Color = Sample.Color;
             Health = Now; MaxHealth = Sample.MaxHealth; Distance = Sample.Distance;
             From = From; To = To;
         });
