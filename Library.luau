@@ -6430,8 +6430,10 @@ function Library:SetBlurSize(Value)
     if Library._blur then Library._blur.Size = Library.BlurSize end;
 end;
 
+Library.BackgroundFolder = 'awp_backgrounds';
+
 function Library:ListBackgrounds()
-    local Dir = (Library.AssetFolder or 'UILib') .. '/backgrounds';
+    local Dir = Library.BackgroundFolder;
     local List = {};
 
     if not (X.isfolder and X.listfiles) then return List end;
@@ -6468,7 +6470,7 @@ function Library:ResolveBackground(Source)
         return nil, '[lib] a background has to be an asset id, an image url, or a png/jpg/jpeg in the backgrounds folder';
     end;
 
-    local Path = (Library.AssetFolder or 'UILib') .. '/backgrounds/' .. Source;
+    local Path = Library.BackgroundFolder .. '/' .. Source;
 
     if not (X.getcustomasset and Library.FS:Exists(Path)) then
         return nil, ("[lib] couldn't find '%s' in the backgrounds folder"):format(Source);
