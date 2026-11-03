@@ -1,4 +1,3 @@
--- upd2
 local X = {
     gethui = gethui or get_hidden_gui or gethiddengui or (syn and syn.gethui);
     cloneref = cloneref or clonereference or function(Item) return Item end;
@@ -3760,8 +3759,8 @@ do
         local ToggleRegion = Library:Create('Frame', {
             Active = true;
             BackgroundTransparency = 1;
-            Position = UDim2.new(0, 0, 0.5, -11);
-            Size = UDim2.new(0, 170, 0, 22);
+            Position = UDim2.new(0, 0, 0.5, -10);
+            Size = UDim2.new(0, 170, 0, 20);
             ZIndex = 8;
             Parent = ToggleOuter;
         });
@@ -3772,7 +3771,7 @@ do
             if Width <= 0 then return end;
 
             ToggleLabel.Size = UDim2.new(0, Width - ToggleOuter.Size.X.Offset - 6, 1, 0);
-            ToggleRegion.Size = UDim2.new(0, Width, 0, 22);
+            ToggleRegion.Size = UDim2.new(0, Width, 0, 20);
         end;
 
         Container:GetPropertyChangedSignal('AbsoluteSize'):Connect(FitRow);
