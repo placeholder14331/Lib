@@ -110,6 +110,7 @@ local Library = {
     ViewportOverride = nil;
     ShowKeybindsOnMobile = true;
     RowHeight = 24;
+    ElementGap = 4;
     Tops = {};
     Searchables = {};
 
@@ -3177,7 +3178,7 @@ do
     function Funcs:AddBlank(Size)
         return Library:Create('Frame', {
             BackgroundTransparency = 1;
-            Size = UDim2.new(1, 0, 0, Size);
+            Size = UDim2.new(1, 0, 0, Size >= 3 and Size + Library.ElementGap or Size);
             ZIndex = 1;
             Parent = self.Container;
         });
