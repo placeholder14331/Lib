@@ -62,7 +62,7 @@ local SaveManager = {} do
                     return data
                 end
 
-                local data = pack(object)
+                local data = pack(object:Get('Color'))
                 data.type, data.idx, data.rainbow = 'ColorPicker', idx, object.Rainbow or false
 
                 if #object.Targets > 1 then
