@@ -954,7 +954,7 @@ function Library:AddToolTip(Info, HoverInstance)
 
         if type(Text) == 'number' then Text = tostring(Text) end;
 
-        if Tip.Disabled or type(Text) ~= 'string' or Text == '' or Library:MouseIsOverOpenedFrame() then
+        if Tip.Disabled or type(Text) ~= 'string' or Text == '' or (Library:MouseIsOverOpenedFrame() and not Tip.AllowOpened) then
             return false;
         end;
 
@@ -4526,6 +4526,9 @@ do
                 });
 
                 local Selected;
+
+                local ValueTip = Info.ValueTooltips and Info.ValueTooltips[Value];
+                if ValueTip then Library:AddToolTip(ValueTip, Button).AllowOpened = true end;
 
                 if not Library.IsMobile then
                     Button.MouseEnter:Connect(function()
@@ -9359,25 +9362,77 @@ function Library:ESPPreview(Info)
         table.clear(BodyTextures);
     end;
 
+    -- wireframe chams: the body hides and thin neon bars trace every part (a block gets its 12 edges plus one diagonal per face,
+    -- the head is a cylinder). The bars are parts of the model, so they turn with it.
+    local function WireBars(Part, Chams)
+        local Half, Lines = Part.Size / 2, {};
+
+        if Part.Name == 'Head' then
+            local Radius = math.min(Half.X, Half.Z);
+
+            for Index = 0, 11 do
+                local A, B = Index / 12 * math.pi * 2, (Index + 1) / 12 * math.pi * 2;
+
+                for _, Y in ipairs({ -Half.Y, Half.Y }) do
+                    table.insert(Lines, { Vector3.new(math.cos(A) * Radius, Y, math.sin(A) * Radius), Vector3.new(math.cos(B) * Radius, Y, math.sin(B) * Radius) });
+                end;
+
+                if Index % 3 == 0 then
+                    table.insert(Lines, { Vector3.new(math.cos(A) * Radius, -Half.Y, math.sin(A) * Radius), Vector3.new(math.cos(A) * Radius, Half.Y, math.sin(A) * Radius) });
+                end;
+            end;
+        else
+            local function Corner(X, Y, Z) return Vector3.new(X * Half.X, Y * Half.Y, Z * Half.Z) end;
+
+            for _, A in ipairs({ -1, 1 }) do
+                for _, B in ipairs({ -1, 1 }) do
+                    table.insert(Lines, { Corner(-1, A, B), Corner(1, A, B) });
+                    table.insert(Lines, { Corner(A, -1, B), Corner(A, 1, B) });
+                    table.insert(Lines, { Corner(A, B, -1), Corner(A, B, 1) });
+                end;
+
+                table.insert(Lines, { Corner(A, -1, -1), Corner(A, 1, 1) });
+                table.insert(Lines, { Corner(-1, A, -1), Corner(1, A, 1) });
+                table.insert(Lines, { Corner(-1, -1, A), Corner(1, 1, A) });
+            end;
+        end;
+
+        for _, Line in ipairs(Lines) do
+            local From, To = Part.CFrame * Line[1], Part.CFrame * Line[2];
+            local Length = (To - From).Magnitude;
+
+            if Length > 0.01 then
+                local Bar = Instance.new('Part');
+
+                Bar.Anchored, Bar.CanCollide, Bar.CanTouch, Bar.CanQuery, Bar.CastShadow = true, false, false, false, false;
+                Bar.Material, Bar.Color, Bar.Transparency = Enum.Material.Neon, Chams.Color or White, Chams.Transparency or 0;
+                Bar.Size = Vector3.new(0.03, 0.03, Length);
+                Bar.CFrame = CFrame.lookAt((From + To) / 2, To);
+                Bar.Parent = Model;
+                table.insert(BodyTextures, Bar);
+            end;
+        end;
+    end;
+
     local function ApplyChams(Chams)
         local Wrapped = Chams.Enabled == true and Chams.Content ~= nil;
 
         if ChamsSeen.Enabled == (Chams.Enabled == true) and ChamsSeen.Color == Chams.Color
             and ChamsSeen.Transparency == Chams.Transparency and ChamsSeen.Material == Chams.Material
-            and ChamsSeen.Tag == Chams.Tag and ChamsSeen.Wrapped == Wrapped then
+            and ChamsSeen.Tag == Chams.Tag and ChamsSeen.Wrapped == Wrapped and ChamsSeen.Wireframe == Chams.Wireframe then
             return;
         end;
 
         ChamsSeen.Enabled, ChamsSeen.Color = Chams.Enabled == true, Chams.Color;
         ChamsSeen.Transparency, ChamsSeen.Material = Chams.Transparency, Chams.Material;
-        ChamsSeen.Tag, ChamsSeen.Wrapped = Chams.Tag, Wrapped;
+        ChamsSeen.Tag, ChamsSeen.Wrapped, ChamsSeen.Wireframe = Chams.Tag, Wrapped, Chams.Wireframe;
 
         local Ok, Material = pcall(function() return Enum.Material[Chams.Material or 'SmoothPlastic'] end);
 
         ClearTextures();
 
         for _, Part in ipairs(Model:GetDescendants()) do
-            if Part:IsA('BasePart') then
+            if Part:IsA('BasePart') and Part.Material ~= Enum.Material.Neon or (Part:IsA('BasePart') and BodyBase[Part]) then
                 local Base = BodyBase[Part];
 
                 if not Base then
@@ -9385,7 +9440,10 @@ function Library:ESPPreview(Info)
                     BodyBase[Part] = Base;
                 end;
 
-                if Chams.Enabled then
+                if Chams.Enabled and Chams.Wireframe then
+                    Part.Transparency = 1;
+                    WireBars(Part, Chams);
+                elseif Chams.Enabled then
                     Part.Color, Part.Material, Part.Transparency = Chams.Color or White, Ok and Material or Base[2], Chams.Transparency or 0;
                 else
                     Part.Color, Part.Material, Part.Transparency = Base[1], Base[2], Base[3];
