@@ -3515,7 +3515,7 @@ do
 
         if Info.Text then
             InputLabel = Library:CreateLabel({
-                Size = UDim2.new(1, 0, 0, 15);
+                Size = UDim2.new(1, -4, 0, 15);
                 TextSize = 14;
                 Text = Info.Text;
                 TextXAlignment = Enum.TextXAlignment.Left;
@@ -4791,11 +4791,11 @@ do
 
         if Info.Text then
             ListLabel = Library:CreateLabel({
-                Size = UDim2.new(1, 0, 0, 15);
+                Size = UDim2.new(1, -4, 0, 15);
                 TextSize = 14;
                 TextTruncate = Enum.TextTruncate.AtEnd;
                 Text = Info.Text;
-                TextXAlignment = Enum.TextXAlignment.Left;
+                TextXAlignment = Enum.TextXAlignment.Center;
                 ZIndex = 5;
                 Parent = Container;
             });
@@ -4861,7 +4861,7 @@ do
                 TextSize = 14;
                 RichText = true;
                 TextTruncate = Enum.TextTruncate.AtEnd;
-                TextXAlignment = Align or Enum.TextXAlignment.Left;
+                TextXAlignment = Align or Enum.TextXAlignment.Center;
                 ZIndex = 9;
                 Parent = Parent;
             });
