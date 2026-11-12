@@ -4873,7 +4873,7 @@ do
             local Head = Library:Create('Frame', {
                 BackgroundColor3 = Library.BackgroundColor;
                 BorderSizePixel = 0;
-                Position = UDim2.fromOffset(0, 1);
+                Position = UDim2.fromOffset(2, 1);
                 Size = UDim2.new(1, -4, 0, HeadH);
                 ZIndex = 8;
                 Parent = ListInner;
@@ -4920,8 +4920,8 @@ do
             BackgroundTransparency = 1;
             BorderSizePixel = 0;
             CanvasSize = UDim2.new(0, 0, 0, 0);
-            Position = UDim2.fromOffset(0, 1 + HeadH);
-            Size = UDim2.new(1, 0, 1, -2 - HeadH - FootH);
+            Position = UDim2.fromOffset(2, 1 + HeadH);
+            Size = UDim2.new(1, -2, 1, -2 - HeadH - FootH);
             ZIndex = 7;
             Parent = ListInner;
 
@@ -4943,7 +4943,7 @@ do
         });
 
         local Empty = Library:CreateLabel({
-            Position = UDim2.fromOffset(0, 1 + HeadH);
+            Position = UDim2.fromOffset(2, 1 + HeadH);
             Size = UDim2.new(1, -4, 1, -2 - HeadH - FootH);
             TextSize = 14;
             TextXAlignment = Enum.TextXAlignment.Center;
@@ -5016,7 +5016,7 @@ do
         local Cells, Natural, Cols = {}, {}, 1;
 
         local function Layout()
-            local Room = Scrolling.AbsoluteSize.X / Library.Scale.Scale - 4 - Lead;
+            local Room = Scrolling.AbsoluteSize.X / Library.Scale.Scale - 2 - Lead;
 
             if Room <= 0 then return end;
 
@@ -5116,7 +5116,7 @@ do
                     BackgroundTransparency = Index % 2 == 0 and 0.5 or 1;
                     BorderSizePixel = 0;
                     LayoutOrder = Index;
-                    Size = UDim2.new(1, -4, 0, Row);
+                    Size = UDim2.new(1, -2, 0, Row);
                     ZIndex = 8;
                     Parent = Scrolling;
                 });
@@ -5334,6 +5334,194 @@ do
         return List;
     end;
 
+    function Funcs:AddBodyPicker(Idx, Info)
+        local Select = Info.Select or 'Multi';
+
+        assert(Select == 'Single' or Select == 'Multi', '[lib] body picker Select must be Single or Multi');
+
+        local Shape = {
+            { 'Head', 1.5, 0, 1, 1 }, { 'Torso', 1, 1, 2, 2 },
+            { 'Right Arm', 0, 1, 1, 2 }, { 'Left Arm', 3, 1, 1, 2 },
+            { 'Right Leg', 1, 3, 1, 2 }, { 'Left Leg', 2, 3, 1, 2 },
+        };
+
+        local Line = Color3.fromRGB(62, 67, 88);
+
+        local Picker = {
+            Value = Select == 'Multi' and {} or nil;
+            Multi = Select == 'Multi';
+            Select = Select;
+            Type = 'BodyPicker';
+            Parts = {};
+            Callback = Info.Callback or function() end;
+        };
+
+        for _, Def in ipairs(Shape) do table.insert(Picker.Parts, Def[1]) end;
+
+        local Groupbox = self;
+        local Container = Groupbox.Container;
+        local Mark = Library:Mark(Container);
+
+        local PickerLabel;
+
+        if Info.Text then
+            PickerLabel = Library:CreateLabel({
+                Size = UDim2.new(1, -4, 0, 15);
+                TextSize = 14;
+                TextTruncate = Enum.TextTruncate.AtEnd;
+                Text = Info.Text;
+                TextXAlignment = Enum.TextXAlignment.Center;
+                ZIndex = 5;
+                Parent = Container;
+            });
+
+            Groupbox:AddBlank(1);
+        end;
+
+        local Height = Info.Height or 150;
+        local Unit = math.floor((Height - 14) / 5);
+        local Gap = 6;
+
+        local Outer = Library:Create('Frame', {
+            BackgroundColor3 = Library.BackgroundColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderMode = Enum.BorderMode.Inset;
+            ClipsDescendants = true;
+            Size = UDim2.new(1, -4, 0, Height);
+            ZIndex = 5;
+            Parent = Container;
+        });
+
+        Library:AddToRegistry(Outer, { BackgroundColor3 = 'BackgroundColor'; BorderColor3 = 'OutlineColor' });
+        Library:DrawGrid(Outer, 800, Height, 6);
+
+        local Figure = Library:Create('Frame', {
+            AnchorPoint = Vector2.new(0.5, 0.5);
+            BackgroundTransparency = 1;
+            Position = UDim2.fromScale(0.5, 0.5);
+            Size = UDim2.fromOffset(4 * Unit, 5 * Unit);
+            ZIndex = 7;
+            Parent = Outer;
+        });
+
+        local Buttons = {};
+
+        local function Paint(Button)
+            local On;
+
+            if Picker.Multi then On = Picker.Value[Button.Name] == true else On = Picker.Value == Button.Name end;
+
+            Button.On = On;
+
+            Library:Tween(Button.Frame, { BackgroundTransparency = On and 0.35 or Button.Hover and 0.85 or 1 }, 0.1);
+        end;
+
+        local function Refresh()
+            for _, Button in ipairs(Buttons) do Paint(Button) end;
+        end;
+
+        local function Changed()
+            Refresh();
+
+            Library:SafeCallback(Picker.Callback, Picker.Value);
+            Library:SafeCallback(Picker.Changed, Picker.Value);
+            Library:UpdateDependencyBoxes();
+        end;
+
+        for _, Def in ipairs(Shape) do
+            local Name = Def[1];
+            local Button = { Name = Name };
+
+            Button.Frame = Library:Create('Frame', {
+                Active = true;
+                BackgroundColor3 = Library.AccentColor;
+                BackgroundTransparency = 1;
+                BorderSizePixel = 0;
+                Position = UDim2.fromOffset(math.floor(Def[2] * Unit + Gap / 2), math.floor(Def[3] * Unit + Gap / 2));
+                Size = UDim2.fromOffset(math.floor(Def[4] * Unit - Gap), math.floor(Def[5] * Unit - Gap));
+                ZIndex = 8;
+                Parent = Figure;
+            });
+
+            Library:AddToRegistry(Button.Frame, { BackgroundColor3 = 'AccentColor' });
+            Library:Create('UICorner', { CornerRadius = UDim.new(0, 3); Parent = Button.Frame });
+            Button.Stroke = Library:Create('UIStroke', { Color = Line; Thickness = 2; Parent = Button.Frame });
+
+            Button.Frame.InputBegan:Connect(function(Input)
+                if not Library:IsClick(Input) or Picker.Disabled then return end;
+
+                if Picker.Multi then
+                    Picker.Value[Name] = (not Picker.Value[Name]) or nil;
+                else
+                    Picker.Value = Picker.Value ~= Name and Name or nil;
+                end;
+
+                Changed();
+            end);
+
+            if not Library.IsMobile then
+                Button.Frame.MouseEnter:Connect(function() Button.Hover = true; Paint(Button) end);
+                Button.Frame.MouseLeave:Connect(function() Button.Hover = false; Paint(Button) end);
+            end;
+
+            Library:AddToolTip(function() return Name end, Button.Frame);
+
+            table.insert(Buttons, Button);
+        end;
+
+        function Picker:SetValue(Val)
+            local Valid = {};
+
+            for _, Name in ipairs(Picker.Parts) do Valid[Name] = true end;
+
+            if Picker.Multi then
+                local NewTable = {};
+
+                for Key, Flag in next, type(Val) == 'table' and Val or {} do
+                    Key = type(Key) == 'number' and Flag or Key; -- { 'Head' } or { Head = true }
+
+                    if Valid[Key] then NewTable[Key] = true end;
+                end;
+
+                Picker.Value = NewTable;
+            else
+                Picker.Value = Valid[Val] and Val or nil;
+            end;
+
+            Changed();
+        end;
+
+        function Picker:OnChanged(Func)
+            Picker.Changed = Func;
+            Library:SafeCallback(Func, Picker.Value);
+        end;
+
+        if Info.Default ~= nil then
+            local Defaults = type(Info.Default) == 'table' and Info.Default or { Info.Default };
+
+            for _, Default in ipairs(Defaults) do
+                if table.find(Picker.Parts, Default) then
+                    if Picker.Multi then Picker.Value[Default] = true else Picker.Value = Default; break end;
+                end;
+            end;
+        end;
+
+        Refresh();
+
+        Groupbox:AddBlank(Info.BlankSize or 5);
+        Groupbox:Resize();
+
+        Picker.Field = Outer;
+
+        Options[Idx] = Picker;
+
+        Library:ApplyCommon(Picker, Info, {
+            Groupbox = Groupbox, Mark = Mark, Text = PickerLabel, Hover = Outer, Dim = { PickerLabel };
+        });
+
+        return Picker;
+    end;
+
     function Funcs:AddDependencyBox()
         local Depbox = {
             Dependencies = {};
@@ -5545,7 +5733,7 @@ do
     function Library:SizeWatermark()
         local Bounds = WatermarkLabel.TextBounds / Library.Scale.Scale;
 
-        WatermarkOuter.Size = UDim2.fromOffset(math.ceil(Bounds.X) + 18, math.ceil(Bounds.Y * 1.5) + 3);
+        WatermarkOuter.Size = UDim2.fromOffset(math.ceil((Library:GetTextBounds(WatermarkLabel.Text, 14))) + 18, math.ceil(Bounds.Y * 1.5) + 3);
     end;
 
     WatermarkLabel:GetPropertyChangedSignal('TextBounds'):Connect(Library.SizeWatermark);
@@ -5795,6 +5983,7 @@ function Library:UpdateWatermark()
     end;
 
     Library.WatermarkText.Text = table.concat(Parts, ' | ');
+    Library:SizeWatermark();
 end;
 
 function Library:RefreshWatermark()
@@ -9091,6 +9280,24 @@ function Library:CreateESP(Parent, Config, Base)
     return Drawer;
 end;
 
+function Library:DrawGrid(Parent, W, H, ZIndex)
+    for At = 20, math.max(W, H), 20 do
+        for _, Vertical in ipairs({ true, false }) do
+            if At < (Vertical and W or H) then
+                Library:Create('Frame', {
+                    BackgroundColor3 = Color3.new(1, 1, 1);
+                    BackgroundTransparency = 0.9;
+                    BorderSizePixel = 0;
+                    Position = Vertical and UDim2.fromOffset(At, 0) or UDim2.fromOffset(0, At);
+                    Size = Vertical and UDim2.new(0, 1, 1, 0) or UDim2.new(1, 0, 0, 1);
+                    ZIndex = ZIndex;
+                    Parent = Parent;
+                });
+            end;
+        end;
+    end;
+end;
+
 function Library:ESPPreview(Info)
     Info = Info or {};
 
@@ -9193,22 +9400,7 @@ function Library:ESPPreview(Info)
     });
 
 
-    for At = 20, math.max(VW, VH), 20 do
-        for _, Vertical in ipairs({ true, false }) do
-            if At < (Vertical and VW or VH) then
-                local Cell = Library:Create('Frame', {
-                    BackgroundColor3 = White;
-                    BackgroundTransparency = 0.9;
-                    BorderSizePixel = 0;
-                    Position = Vertical and UDim2.fromOffset(At, 0) or UDim2.fromOffset(0, At);
-                    Size = Vertical and UDim2.new(0, 1, 1, 0) or UDim2.new(1, 0, 0, 1);
-                    ZIndex = 63;
-                    Parent = Grid;
-                });
-
-            end;
-        end;
-    end;
+    Library:DrawGrid(Grid, VW, VH, 63);
 
     local Viewport = Library:Create('ViewportFrame', {
         Active = true;
