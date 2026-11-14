@@ -3,30 +3,31 @@ local HttpService = game:GetService('HttpService')
 local ThemeManager = {} do
     ThemeManager.Folder = 'UILibSettings'
     ThemeManager.Library = nil
-    ThemeManager.DefaultTheme = 'Default'
+    ThemeManager.DefaultTheme = 'awp'
     ThemeManager.Fields = { 'FontColor', 'MainColor', 'AccentColor', 'BackgroundColor', 'OutlineColor' }
 
     ThemeManager.BuiltInThemes = {
-        ['Default']          = { 1, HttpService:JSONDecode('{"FontColor":"e8e8ee","MainColor":"131317","AccentColor":"ad7038","BackgroundColor":"0c0c0f","OutlineColor":"25252d"}') },
-        ['Nord']             = { 2, HttpService:JSONDecode('{"FontColor":"eceff4","MainColor":"3b4252","AccentColor":"88c0d0","BackgroundColor":"2e3440","OutlineColor":"4c566a"}') },
-        ['Dracula']          = { 3, HttpService:JSONDecode('{"FontColor":"f8f8f2","MainColor":"343746","AccentColor":"bd93f9","BackgroundColor":"282a36","OutlineColor":"44475a"}') },
-        ['Catppuccin Mocha'] = { 4, HttpService:JSONDecode('{"FontColor":"cdd6f4","MainColor":"1e1e2e","AccentColor":"cba6f7","BackgroundColor":"181825","OutlineColor":"45475a"}') },
-        ['Gruvbox']          = { 5, HttpService:JSONDecode('{"FontColor":"ebdbb2","MainColor":"282828","AccentColor":"d79921","BackgroundColor":"1d2021","OutlineColor":"504945"}') },
-        ['Rosé Pine']        = { 6, HttpService:JSONDecode('{"FontColor":"e0def4","MainColor":"1f1d2e","AccentColor":"c4a7e7","BackgroundColor":"191724","OutlineColor":"403d52"}') },
-        ['One Dark']         = { 7, HttpService:JSONDecode('{"FontColor":"abb2bf","MainColor":"282c34","AccentColor":"61afef","BackgroundColor":"21252b","OutlineColor":"3e4451"}') },
-        ['Monokai']          = { 8, HttpService:JSONDecode('{"FontColor":"f8f8f2","MainColor":"272822","AccentColor":"a6e22e","BackgroundColor":"1e1f1c","OutlineColor":"49483e"}') },
-        ['Kanagawa']         = { 9, HttpService:JSONDecode('{"FontColor":"dcd7ba","MainColor":"1f1f28","AccentColor":"7e9cd8","BackgroundColor":"16161d","OutlineColor":"363646"}') },
-        ['Everforest']       = { 10, HttpService:JSONDecode('{"FontColor":"d3c6aa","MainColor":"2d353b","AccentColor":"a7c080","BackgroundColor":"232a2e","OutlineColor":"475258"}') },
-        ['Midnight']         = { 11, HttpService:JSONDecode('{"FontColor":"f0f0f0","MainColor":"0a0a0a","AccentColor":"3b82f6","BackgroundColor":"000000","OutlineColor":"1f1f1f"}') },
-        ['Crimson']          = { 12, HttpService:JSONDecode('{"FontColor":"ecdcdc","MainColor":"160e10","AccentColor":"e11d48","BackgroundColor":"0d0809","OutlineColor":"2e1c20"}') },
-        ['Linoria']          = { 13, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1c1c1c","AccentColor":"0055ff","BackgroundColor":"141414","OutlineColor":"323232"}') },
-        ['BBot']             = { 14, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1e1e","AccentColor":"7e48a3","BackgroundColor":"232323","OutlineColor":"141414"}') },
-        ['Fatality']         = { 15, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1842","AccentColor":"c50754","BackgroundColor":"191335","OutlineColor":"3c355d"}') },
-        ['Jester']           = { 16, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"db4467","BackgroundColor":"1c1c1c","OutlineColor":"373737"}') },
-        ['Mint']             = { 17, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"3db488","BackgroundColor":"1c1c1c","OutlineColor":"373737"}') },
-        ['Tokyo Night']      = { 18, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"191925","AccentColor":"6759b3","BackgroundColor":"16161f","OutlineColor":"323232"}') },
-        ['Ubuntu']           = { 19, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"3e3e3e","AccentColor":"e2581e","BackgroundColor":"323232","OutlineColor":"191919"}') },
-        ['Quartz']           = { 20, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"232330","AccentColor":"426e87","BackgroundColor":"1d1b26","OutlineColor":"27232f"}') },
+        ['awp']              = { 1, HttpService:JSONDecode('{"FontColor":"ececef","MainColor":"131316","AccentColor":"5a6ea8","BackgroundColor":"0a0a0c","OutlineColor":"26262b"}') },
+        ['awp Old']          = { 2, HttpService:JSONDecode('{"FontColor":"e8e8ee","MainColor":"131317","AccentColor":"ad7038","BackgroundColor":"0c0c0f","OutlineColor":"25252d"}') },
+        ['Nord']             = { 3, HttpService:JSONDecode('{"FontColor":"eceff4","MainColor":"3b4252","AccentColor":"88c0d0","BackgroundColor":"2e3440","OutlineColor":"4c566a"}') },
+        ['Dracula']          = { 4, HttpService:JSONDecode('{"FontColor":"f8f8f2","MainColor":"343746","AccentColor":"bd93f9","BackgroundColor":"282a36","OutlineColor":"44475a"}') },
+        ['Catppuccin Mocha'] = { 5, HttpService:JSONDecode('{"FontColor":"cdd6f4","MainColor":"1e1e2e","AccentColor":"cba6f7","BackgroundColor":"181825","OutlineColor":"45475a"}') },
+        ['Gruvbox']          = { 6, HttpService:JSONDecode('{"FontColor":"ebdbb2","MainColor":"282828","AccentColor":"d79921","BackgroundColor":"1d2021","OutlineColor":"504945"}') },
+        ['Rosé Pine']        = { 7, HttpService:JSONDecode('{"FontColor":"e0def4","MainColor":"1f1d2e","AccentColor":"c4a7e7","BackgroundColor":"191724","OutlineColor":"403d52"}') },
+        ['One Dark']         = { 8, HttpService:JSONDecode('{"FontColor":"abb2bf","MainColor":"282c34","AccentColor":"61afef","BackgroundColor":"21252b","OutlineColor":"3e4451"}') },
+        ['Monokai']          = { 9, HttpService:JSONDecode('{"FontColor":"f8f8f2","MainColor":"272822","AccentColor":"a6e22e","BackgroundColor":"1e1f1c","OutlineColor":"49483e"}') },
+        ['Kanagawa']         = { 10, HttpService:JSONDecode('{"FontColor":"dcd7ba","MainColor":"1f1f28","AccentColor":"7e9cd8","BackgroundColor":"16161d","OutlineColor":"363646"}') },
+        ['Everforest']       = { 11, HttpService:JSONDecode('{"FontColor":"d3c6aa","MainColor":"2d353b","AccentColor":"a7c080","BackgroundColor":"232a2e","OutlineColor":"475258"}') },
+        ['Midnight']         = { 12, HttpService:JSONDecode('{"FontColor":"f0f0f0","MainColor":"0a0a0a","AccentColor":"3b82f6","BackgroundColor":"000000","OutlineColor":"1f1f1f"}') },
+        ['Crimson']          = { 13, HttpService:JSONDecode('{"FontColor":"ecdcdc","MainColor":"160e10","AccentColor":"e11d48","BackgroundColor":"0d0809","OutlineColor":"2e1c20"}') },
+        ['Linoria']          = { 14, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1c1c1c","AccentColor":"0055ff","BackgroundColor":"141414","OutlineColor":"323232"}') },
+        ['BBot']             = { 15, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1e1e","AccentColor":"7e48a3","BackgroundColor":"232323","OutlineColor":"141414"}') },
+        ['Fatality']         = { 16, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1842","AccentColor":"c50754","BackgroundColor":"191335","OutlineColor":"3c355d"}') },
+        ['Jester']           = { 17, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"db4467","BackgroundColor":"1c1c1c","OutlineColor":"373737"}') },
+        ['Mint']             = { 18, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"3db488","BackgroundColor":"1c1c1c","OutlineColor":"373737"}') },
+        ['Tokyo Night']      = { 19, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"191925","AccentColor":"6759b3","BackgroundColor":"16161f","OutlineColor":"323232"}') },
+        ['Ubuntu']           = { 20, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"3e3e3e","AccentColor":"e2581e","BackgroundColor":"323232","OutlineColor":"191919"}') },
+        ['Quartz']           = { 21, HttpService:JSONDecode('{"FontColor":"ffffff","MainColor":"232330","AccentColor":"426e87","BackgroundColor":"1d1b26","OutlineColor":"27232f"}') },
     }
 
     function ThemeManager:SetLibrary(lib)
@@ -131,7 +132,7 @@ local ThemeManager = {} do
         local saved = self.Library.FS:Read(self:ThemesDir() .. '/default.txt')
         saved = saved and saved:gsub('%.json$', '')
 
-        for _, name in ipairs({ saved or '', self.DefaultTheme, 'Default' }) do
+        for _, name in ipairs({ saved or '', self.DefaultTheme, 'awp' }) do
             if self.BuiltInThemes[name] or (name ~= '' and self:GetCustomTheme(name)) then
                 return name
             end
