@@ -50,12 +50,12 @@ local Library = {
     Registry = {};
     DetachedTabs = {};
 
-    FontColor = Color3.fromRGB(232, 232, 238);
-    MainColor = Color3.fromRGB(19, 19, 23);
-    BackgroundColor = Color3.fromRGB(12, 12, 15);
-    AccentColor = Color3.fromRGB(173, 112, 56);
-    OutlineColor = Color3.fromRGB(37, 37, 45);
-    PanelStrokeColor = Color3.fromRGB(37, 37, 45);
+    FontColor = Color3.fromRGB(236, 236, 239);
+    MainColor = Color3.fromRGB(19, 19, 22);
+    BackgroundColor = Color3.fromRGB(10, 10, 12);
+    AccentColor = Color3.fromRGB(90, 110, 168);
+    OutlineColor = Color3.fromRGB(38, 38, 43);
+    PanelStrokeColor = Color3.fromRGB(38, 38, 43);
     RiskColor = Color3.fromRGB(255, 77, 94);
 
     Black = Color3.fromRGB(5, 5, 7);
@@ -87,7 +87,7 @@ local Library = {
     RoundEdges = false;
     Corners = {};
     NotifySide = 'Left';
-    KeybindOpacity = 0;
+    KeybindOpacity = 1;
     Offscreen = true;
 
     Style = 'Solid';
@@ -127,12 +127,12 @@ local Library = {
 
     BorderStyle = 'Animated';
     BorderUseTheme = true;
-    BorderColor = Color3.fromRGB(173, 112, 56);
-    BorderBase = Color3.fromRGB(37, 37, 45);
+    BorderColor = Color3.fromRGB(90, 110, 168);
+    BorderBase = Color3.fromRGB(38, 38, 43);
     BorderTransparency = 0;
     BorderSpeed = 0.2;
 
-    Glow = { Size = 8; Color = Color3.fromRGB(173, 112, 56); Transparency = 0.5; UseTheme = false };
+    Glow = { Size = 8; Color = Color3.fromRGB(90, 110, 168); Transparency = 0.5; UseTheme = false };
 
     _lerps = {};
     _glides = {};
@@ -1067,8 +1067,8 @@ function Library:ClosePopups()
 end;
 
 Library.HideUnboundKeybinds = false;
-Library.KeybindFilter = {};
-Library.KeybindShow = { Bar = true; Type = true; Border = false };
+Library.KeybindFilter = { ['Unbound keys'] = true };
+Library.KeybindShow = { Bar = true; Type = true; Border = true };
 Library.KeybindRight = false;
 
 function Library:RefreshKeybindFrame()
@@ -1779,6 +1779,16 @@ do
 
                 Button.InputBegan:Connect(function(Input)
                     if Library:IsTap(Input, Button) then
+                        local Back = ColorPicker.Target;
+
+                        for _, Other in ipairs(Targets) do
+                            if Other ~= Back then
+                                ColorPicker:SetTarget(Other);
+                                ColorPicker:SetMode(Name);
+                            end;
+                        end;
+
+                        ColorPicker:SetTarget(Back);
                         ColorPicker:SetMode(Name);
                         Library:AttemptSave();
                     end;
@@ -1863,7 +1873,13 @@ do
                 local Button = HeaderButton(TabRow, Name, Index);
 
                 Button.InputBegan:Connect(function(Input)
-                    if Library:IsTap(Input, Button) then ColorPicker:SetTarget(Name) end;
+                    if Library:IsTap(Input, Button) then
+                        local Mode = ColorPicker.Mode;
+
+                        ColorPicker:SetTarget(Name);
+
+                        if ColorPicker.Mode ~= Mode then ColorPicker:SetMode(Mode) end;
+                    end;
                 end);
 
                 TabLabels[Name] = Button;
@@ -4873,8 +4889,8 @@ do
             local Head = Library:Create('Frame', {
                 BackgroundColor3 = Library.BackgroundColor;
                 BorderSizePixel = 0;
-                Position = UDim2.fromOffset(2, 1);
-                Size = UDim2.new(1, -4, 0, HeadH);
+                Position = UDim2.fromOffset(1, 1);
+                Size = UDim2.new(1, -2, 0, HeadH);
                 ZIndex = 8;
                 Parent = ListInner;
             });
@@ -4885,14 +4901,14 @@ do
 
             HeadBody = Library:Create('Frame', {
                 BackgroundTransparency = 1;
-                Position = UDim2.fromOffset(Lead, 0);
-                Size = UDim2.new(1, -Lead, 1, 0);
+                Position = UDim2.fromOffset(Lead + 1, 0);
+                Size = UDim2.new(1, -Lead - 2, 1, 0);
                 ZIndex = 9;
                 Parent = Head;
             });
 
             if Info.Numbered then
-                local Hash = Text(Head, UDim2.fromOffset(MarkW + 6, 0), UDim2.new(0, NumW - 6, 1, 0));
+                local Hash = Text(Head, UDim2.fromOffset(MarkW + 7, 0), UDim2.new(0, NumW - 6, 1, 0));
                 Hash.Text = '#';
                 Hash.TextTransparency = 0.4;
             end;
@@ -5743,7 +5759,7 @@ do
         BackgroundTransparency = 1;
         BorderSizePixel = 0;
         Size = UDim2.fromOffset(100, 20);
-        Visible = false;
+        Visible = true;
         ZIndex = 100;
         Parent = Library.Root;
     });
@@ -5890,7 +5906,7 @@ function Library:UpdateKeybindList(NoSize)
     K.Inner.BackgroundTransparency = 1 - Library.KeybindOpacity;
     K.Stroke.Enabled = Show.Border;
 
-    if Show.Border then Library:StyleBorder(K.Stroke, Library.Outlines[K.Stroke].Gradient) end;
+    if Show.Border and Library.StyleBorder then Library:StyleBorder(K.Stroke, Library.Outlines[K.Stroke].Gradient) end;
 
     for _, Label in next, Library.KeybindContainer:GetChildren() do
         if Label:IsA('TextLabel') then Label.TextXAlignment = Right and Enum.TextXAlignment.Right or Enum.TextXAlignment.Left end;
@@ -6472,7 +6488,7 @@ function Library:SanitizeName(Name)
     return Name;
 end;
 
-Library.UIIndexes = { 'UI_Layout', 'UI_DPI', 'UI_NotifySide', 'UI_KeybindList', 'UI_KeybindOpacity', 'UI_KeybindFilter', 'UI_KeybindShow', 'UI_ESPPreview', 'UI_MenuKeybind', 'UI_RoundEdges', 'UI_BorderStyle', 'UI_BorderSpeed', 'UI_BorderTheme', 'UI_BorderColor', 'UI_BorderBase', 'UI_GlowSize', 'UI_GlowColor', 'UI_GlowTheme';
+Library.UIIndexes = { 'UI_Layout', 'UI_DPI', 'UI_NotifySide', 'UI_KeybindList', 'UI_KeybindOpacity', 'UI_KeybindFilter', 'UI_KeybindShow', 'UI_MenuKeybind', 'UI_RoundEdges', 'UI_BorderStyle', 'UI_BorderSpeed', 'UI_BorderTheme', 'UI_BorderColor', 'UI_BorderBase', 'UI_GlowSize', 'UI_GlowColor', 'UI_GlowTheme';
     'UI_Style', 'UI_GlassIntensity', 'UI_BlurSize', 'UI_UIBlurAmount', 'UI_UIBlurTint', 'UI_Offscreen', 'UI_BgSource', 'UI_BgTransparency', 'UI_BgDim' };
 
 Library.UITransient = { 'UI_BgFile' };
@@ -6942,27 +6958,18 @@ function Library:BuildUISettings(Target)
         Callback = function(Value) Library.KeybindFrame.Visible = Value end;
     });
 
-    Hud:AddToggle('UI_ESPPreview', {
-        Text = 'Show ESP preview'; Default = true;
-        Callback = function(Value)
-            for Preview in next, Library.ESPPreviews do
-                if Preview.Shown ~= Value then Preview:SetVisible(Value) end;
-            end;
-        end;
-    });
-
     Hud:AddSlider('UI_KeybindOpacity', {
         Text = 'Keybind list opacity'; Min = 0; Max = 100; Default = math.floor(Library.KeybindOpacity * 100 + 0.5); Rounding = 0; Suffix = '%';
         Callback = function(Value) Library:SetKeybindOpacity(Value / 100) end;
     });
 
     Hud:AddDropdown('UI_KeybindFilter', {
-        Text = 'Filter'; Values = { 'Unbound keys', 'Hold keys', 'Toggle keys', 'Press keys' }; Default = {}; Multi = true; AllowNull = true;
+        Text = 'Filter'; Values = { 'Unbound keys', 'Hold keys', 'Toggle keys', 'Press keys' }; Default = { 'Unbound keys' }; Multi = true; AllowNull = true;
         Callback = function(Value) Library:SetKeybindFilter(Value) end;
     });
 
     Hud:AddDropdown('UI_KeybindShow', {
-        Text = 'Show'; Values = { 'Bar', 'Type', 'Border' }; Default = { 'Bar', 'Type' }; Multi = true; AllowNull = true;
+        Text = 'Show'; Values = { 'Bar', 'Type', 'Border' }; Default = { 'Bar', 'Type', 'Border' }; Multi = true; AllowNull = true;
         Callback = function(Value) Library:SetKeybindShow(Value) end;
     });
 
@@ -9301,10 +9308,6 @@ end;
 function Library:ESPPreview(Info)
     Info = Info or {};
 
-    if Info.Visible == nil and Toggles.UI_ESPPreview then
-        Info.Visible = Toggles.UI_ESPPreview.Value;
-    end;
-
     Library.ESPCount = (Library.ESPCount or 0) + 1;
 
     local Id = 'ESPPreview' .. Library.ESPCount;
@@ -9733,10 +9736,6 @@ function Library:ESPPreview(Info)
 
     function Preview:SetVisible(Bool)
         Preview.Shown = not not Bool;
-
-        local Switch = Toggles.UI_ESPPreview;
-
-        if Switch and Switch.Value ~= Preview.Shown then Switch:SetValue(Preview.Shown) end;
     end;
 
     function Preview:Toggle()
