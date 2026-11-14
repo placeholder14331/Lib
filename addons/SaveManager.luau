@@ -47,6 +47,16 @@ local SaveManager = {} do
                 end
             end,
         },
+        BodyPicker = {
+            Save = function(idx, object)
+                return { type = 'BodyPicker', idx = idx, value = object.Value, multi = object.Multi }
+            end,
+            Load = function(idx, data)
+                if Options[idx] then
+                    Options[idx]:SetValue(data.value)
+                end
+            end,
+        },
         ColorPicker = {
             Save = function(idx, object)
                 local function pack(state)
