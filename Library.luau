@@ -7876,13 +7876,11 @@ function WindowBase:UpdateGradient()
     self:UpdateGlow();
 
     local LineMoves = Library.MenuOpen;
-    local BorderMoves = LineMoves and Style == 'Animated';
+    local BorderMoves = Style == 'Animated';
     if LineMoves or BorderMoves then
         local T, Odd = 0, false;
 
         Library:BindRender('WindowFx', function(Delta)
-            if next(Library._drags) then return end;
-
             T = (T + Delta * 0.25) % 1;
 
             self.BorderAngle = ((self.BorderAngle or 0) + Delta * 90 * Library.BorderSpeed) % 360;
